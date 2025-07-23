@@ -1,131 +1,308 @@
-import React, { useState } from 'react';
-import { BraSilhouetteIcon } from './Icons'; // remove if unused
+import React, { useState, useMemo } from 'react';
 
-// Reusable component for selection cards
-const SelectionCard = ({ text, subtext, onClick, isSelected = false }) => (
-  <div
-    onClick={onClick}
-    className={`border-2 rounded-lg p-6 text-center cursor-pointer transition-all duration-300
-      ${isSelected ? 'border-brand-accent bg-brand-accent/10 ring-2 ring-brand-accent' : 'border-gray-200 hover:border-brand-accent/50'}`}
-  >
-    <h3 className="text-lg font-semibold text-brand-text">{text}</h3>
-    {subtext && <p className="text-sm text-gray-500 mt-1">{subtext}</p>}
-  </div>
+// --- Data & Logic ---
+// I've parsed and combined your two CSV files into this single data structure.
+// Values like "31 1/2" have been converted to numbers (31.5).
+const sizeChart = [
+    { underband: 26, overbust: 30, size: "30A" },
+    { underband: 26, overbust: 31.5, size: "30B" },
+    { underband: 26, overbust: 32.5, size: "30C" },
+    { underband: 26, overbust: 33.5, size: "30D" },
+    { underband: 28, overbust: 32.5, size: "32A" },
+    { underband: 28, overbust: 33.5, size: "32B" },
+    { underband: 28, overbust: 34.5, size: "32C" },
+    { underband: 28, overbust: 35.5, size: "32D" },
+    { underband: 28, overbust: 36.5, size: "32DD" },
+    { underband: 28, overbust: 37.5, size: "32F" },
+    { underband: 28, overbust: 38.5, size: "32G" },
+    { underband: 28, overbust: 39.5, size: "32H" },
+    { underband: 30, overbust: 34.5, size: "34A" },
+    { underband: 30, overbust: 35.5, size: "34B" },
+    { underband: 30, overbust: 36.5, size: "34C" },
+    { underband: 30, overbust: 37.5, size: "34D" },
+    { underband: 30, overbust: 38.5, size: "34DD" },
+    { underband: 30, overbust: 39.5, size: "34F" },
+    { underband: 30, overbust: 40.5, size: "34F" },
+    { underband: 30, overbust: 41.5, size: "34G" },
+    { underband: 30, overbust: 42.5, size: "34G" },
+    { underband: 30, overbust: 43.5, size: "34H" },
+    { underband: 32, overbust: 36.5, size: "36A" },
+    { underband: 32, overbust: 37.5, size: "36B" },
+    { underband: 32, overbust: 38.5, size: "36C" },
+    { underband: 32, overbust: 39.5, size: "36D" },
+    { underband: 32, overbust: 40.5, size: "36DD" },
+    { underband: 32, overbust: 41.5, size: "36F" },
+    { underband: 32, overbust: 42.5, size: "36F" },
+    { underband: 32, overbust: 43.5, size: "36G" },
+    { underband: 32, overbust: 44.5, size: "36H" },
+    { underband: 32, overbust: 45.5, size: "36H" },
+    { underband: 34, overbust: 37.5, size: "38A" },
+    { underband: 34, overbust: 38.5, size: "38A" },
+    { underband: 34, overbust: 39.5, size: "38B" },
+    { underband: 34, overbust: 40.5, size: "38C" },
+    { underband: 34, overbust: 41.5, size: "38D" },
+    { underband: 34, overbust: 42.5, size: "38D" },
+    { underband: 34, overbust: 43.5, size: "38DD" },
+    { underband: 34, overbust: 44.5, size: "38DD" },
+    { underband: 34, overbust: 45.5, size: "38F" },
+    { underband: 36, overbust: 42.5, size: "40B" },
+    { underband: 36, overbust: 43.5, size: "40B" },
+    { underband: 36, overbust: 44.5, size: "40C" },
+    { underband: 36, overbust: 45.5, size: "40D" },
+    { underband: 36, overbust: 46.5, size: "40DD" },
+    { underband: 36, overbust: 47.5, size: "40F" },
+    { underband: 36, overbust: 48.5, size: "40G" },
+    { underband: 36, overbust: 49.5, size: "40H" },
+    { underband: 38, overbust: 42.5, size: "42A" },
+    { underband: 38, overbust: 43.5, size: "42B" },
+    { underband: 38, overbust: 45.5, size: "42C" },
+    { underband: 38, overbust: 46.5, size: "42D" },
+    { underband: 38, overbust: 47.5, size: "42D" },
+    { underband: 38, overbust: 48.5, size: "42DD" },
+    { underband: 38, overbust: 49.5, size: "42F" },
+    { underband: 38, overbust: 50.5, size: "42G" },
+    { underband: 38, overbust: 51.5, size: "42H" },
+    { underband: 40, overbust: 43.5, size: "44A" },
+    { underband: 40, overbust: 44.5, size: "44A" },
+    { underband: 40, overbust: 45.5, size: "44B" },
+    { underband: 40, overbust: 47.5, size: "44C" },
+    { underband: 40, overbust: 48.5, size: "44D" },
+    { underband: 40, overbust: 50.5, size: "44DD" },
+    { underband: 40, overbust: 51.5, size: "44F" },
+    { underband: 40, overbust: 52.5, size: "44G" },
+    { underband: 40, overbust: 53.5, size: "44H" },
+    { underband: 42, overbust: 51.5, size: "46D" },
+    { underband: 42, overbust: 52.5, size: "46DD" },
+    { underband: 42, overbust: 53.5, size: "46F" },
+    { underband: 42, overbust: 54.5, size: "46G" },
+    { underband: 42, overbust: 55.5, size: "46H" },
+    { underband: 42, overbust: 56.5, size: "46H" },
+];
+
+// This function finds the closest match in the chart.
+// It rounds the user's input to the nearest valid measurement in our table.
+const findBraSize = (under, over) => {
+    if (!under || !over) return null;
+
+    // Find the closest valid underband measurement from our chart
+    const validUnderbands = [...new Set(sizeChart.map(item => item.underband))];
+    const closestUnderband = validUnderbands.reduce((prev, curr) =>
+        (Math.abs(curr - under) < Math.abs(prev - under) ? curr : prev)
+    );
+
+    // Filter the chart for that underband and find the closest overbust
+    const possibleFits = sizeChart.filter(item => item.underband === closestUnderband);
+    if (possibleFits.length === 0) return null;
+
+    const closestFit = possibleFits.reduce((prev, curr) =>
+        (Math.abs(curr.overbust - over) < Math.abs(prev.overbust - over) ? curr : prev)
+    );
+
+    // To be a valid match, the user's measurement should be reasonably close
+    if (Math.abs(closestFit.overbust - over) > 1) { // Allow a 1-inch tolerance
+        return null;
+    }
+
+    return closestFit.size;
+};
+
+
+// --- UI Components ---
+
+const SelectionCard = ({ text, subtext, onClick }) => (
+    <div
+        onClick={onClick}
+        className="border-2 rounded-lg p-6 text-center cursor-pointer transition-all duration-300 border-gray-200 hover:border-brand-accent/50 hover:bg-brand-accent/5"
+    >
+        <h3 className="text-lg font-semibold text-brand-text">{text}</h3>
+        {subtext && <p className="text-sm text-gray-500 mt-1">{subtext}</p>}
+    </div>
 );
 
-// Main Quiz Component
-export default function QuizFlow() {
-  const [step, setStep] = useState('hub');          // hub, size_1, shape_1, results, etc.
-  const [path, setPath] = useState(null);           // 'style', 'size', 'full'
-  const [answers, setAnswers] = useState({});
+const InputField = ({ label, value, onChange }) => (
+    <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <input
+            type="number"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder="e.g., 34"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-accent focus:border-brand-accent"
+        />
+    </div>
+);
 
-  const handleAnswer = (questionId, answer) => {
-    setAnswers(prev => ({ ...prev, [questionId]: answer }));
-  };
+// --- Quiz Step Components ---
 
-  const renderStep = () => {
-    switch (step) {
-      case 'hub':
-        return (
-          <div className="text-center">
-            <h2 className="font-serif text-4xl mb-4">How can we help you find your fit?</h2>
-            <p className="text-gray-600 mb-8 max-w-xl mx-auto">Choose a path below to get personalized recommendations.</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <SelectionCard
+const HubStep = ({ setPath, setStep }) => (
+    <div className="text-center">
+        <h2 className="font-serif text-4xl mb-4">How can we help you find your fit?</h2>
+        <p className="text-gray-600 mb-8 max-w-xl mx-auto">Choose a path below to get personalized recommendations.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <SelectionCard
                 text="Find My Style"
                 subtext="I know my size, help me with style."
                 onClick={() => { setPath('style'); setStep('shape_1'); }}
-              />
-              <SelectionCard
+            />
+            <SelectionCard
                 text="Check My Size"
-                subtext="Let's evaluate your current bra fit."
-                onClick={() => { setPath('size'); setStep('size_1'); }}
-              />
-              <SelectionCard
+                subtext="Use measurements to find your size."
+                onClick={() => { setPath('size'); setStep('size_calculator'); }}
+            />
+            <SelectionCard
                 text="The Full Fitting"
                 subtext="Start from scratch for size & style."
-                onClick={() => { setPath('full'); setStep('size_1'); }}
-              />
-            </div>
-          </div>
-        );
-
-      case 'size_1':
-        return (
-          <div className="text-center">
-            <h2 className="font-serif text-4xl mb-4">Let's check your band fit.</h2>
-            <p className="text-gray-600 mb-8">How does the band of your current bra feel?</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <SelectionCard text="Too Tight" onClick={() => { handleAnswer('bandFit', 'tight'); setStep(path === 'size' ? 'size_results' : 'shape_1'); }} />
-              <SelectionCard text="Just Right" onClick={() => { handleAnswer('bandFit', 'good'); setStep(path === 'size' ? 'size_results' : 'shape_1'); }} />
-              <SelectionCard text="Too Loose" onClick={() => { handleAnswer('bandFit', 'loose'); setStep(path === 'size' ? 'size_results' : 'shape_1'); }} />
-            </div>
-            <button onClick={() => setStep('hub')} className="mt-8 text-sm text-gray-500 hover:text-brand-text">← Back</button>
-          </div>
-        );
-
-      case 'shape_1':
-        return (
-          <div className="text-center">
-            <h2 className="font-serif text-4xl mb-4">Which shape best describes you?</h2>
-            <p className="text-gray-600 mb-8">This helps us recommend styles that prevent gaping or spilling.</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <SelectionCard text="Round"      onClick={() => { handleAnswer('shape', 'round');      setStep('results'); }} />
-              <SelectionCard text="Teardrop"   onClick={() => { handleAnswer('shape', 'teardrop');   setStep('results'); }} />
-              <SelectionCard text="Bell"       onClick={() => { handleAnswer('shape', 'bell');       setStep('results'); }} />
-              <SelectionCard text="East-West"  onClick={() => { handleAnswer('shape', 'east-west');  setStep('results'); }} />
-              <SelectionCard text="Side Set"   onClick={() => { handleAnswer('shape', 'side-set');   setStep('results'); }} />
-              <SelectionCard text="Slender"    onClick={() => { handleAnswer('shape', 'slender');    setStep('results'); }} />
-            </div>
-            <button
-              onClick={() => setStep(path === 'style' ? 'hub' : 'size_1')}
-              className="mt-8 text-sm text-gray-500 hover:text-brand-text"
-            >
-              ← Back
-            </button>
-          </div>
-        );
-
-      case 'size_results':
-        return (
-          <div className="text-center">
-            <h2 className="font-serif text-4xl mb-4">Your Size Recommendation</h2>
-            <p className="text-gray-600 mb-8">Based on your answers, we suggest trying a <strong>34D</strong>.</p>
-            <div className="bg-brand-accent/10 p-6 rounded-lg">
-              <p className="text-brand-text mb-4">Ready to find the perfect styles for your new size?</p>
-              <button
-                onClick={() => setStep('shape_1')}
-                className="bg-brand-accent text-white font-bold text-lg px-12 py-4 rounded-lg hover:opacity-90 transition-opacity"
-              >
-                Continue to Style Finder
-              </button>
-            </div>
-            <button onClick={() => setStep('hub')} className="mt-8 text-sm text-gray-500 hover:text-brand-text">Start Over</button>
-          </div>
-        );
-
-      case 'results':
-        return (
-          <div className="text-center">
-            <h2 className="font-serif text-4xl mb-4">Your Personalised Recommendations</h2>
-            <p className="text-gray-600 mb-2">You chose the <strong>{path}</strong> path.</p>
-            <p className="text-gray-600 mb-8">Your answers: {JSON.stringify(answers)}</p>
-            <div className="border-t pt-8">
-              <h3 className="text-2xl font-semibold mb-4">We recommend trying a <strong>Plunge Bra</strong>.</h3>
-              <p>This style is great for your shape because it helps to...</p>
-            </div>
-            <button onClick={() => setStep('hub')} className="mt-8 text-sm text-gray-500 hover:text-brand-text">Start Over</button>
-          </div>
-        );
-
-      default:
-        return <div>Quiz Error. <button onClick={() => setStep('hub')}>Restart</button></div>;
-    }
-  };
-
-  return (
-    <div className="w-full max-w-4xl mx-auto py-16 transition-opacity duration-500">
-      {renderStep()}
+                onClick={() => { setPath('full'); setStep('size_calculator'); }}
+            />
+        </div>
     </div>
-  );
+);
+
+const SizeCalculatorStep = ({ setStep, setCalculatedSize }) => {
+    const [underbust, setUnderbust] = useState('');
+    const [overbust, setOverbust] = useState('');
+
+    const handleFindSize = () => {
+        const size = findBraSize(parseFloat(underbust), parseFloat(overbust));
+        setCalculatedSize(size);
+        setStep('size_result');
+    };
+
+    return (
+        <div className="text-center">
+            <h2 className="font-serif text-4xl mb-4">Bra Size Calculator</h2>
+            <p className="text-gray-600 mb-8 max-w-xl mx-auto">Enter your measurements in inches to find your recommended starting size.</p>
+
+            <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                    <InputField label="Underband (inches)" value={underbust} onChange={setUnderbust} />
+                    <InputField label="Overbust (inches)" value={overbust} onChange={setOverbust} />
+                </div>
+                <button
+                    onClick={handleFindSize}
+                    className="w-full bg-brand-accent text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity"
+                    disabled={!underbust || !overbust}
+                >
+                    Find My Size
+                </button>
+            </div>
+
+            <div className="mt-8">
+                <p className="text-gray-600 mb-4">Not sure how to measure?</p>
+                {/* Replace this with your actual measurement guide image */}
+                <img
+                    src="https://placehold.co/600x400/FAFAF9/8B9F8A?text=Measurement+Guide+Image"
+                    alt="A diagram showing where to measure the underband and overbust for bra fitting"
+                    className="max-w-lg mx-auto rounded-lg"
+                />
+            </div>
+            <button onClick={() => setStep('hub')} className="mt-8 text-sm text-gray-500 hover:text-brand-text">← Back to Start</button>
+        </div>
+    );
+};
+
+const SizeResultStep = ({ calculatedSize, path, setStep }) => (
+    <div className="text-center">
+        {calculatedSize ? (
+            <>
+                <h2 className="font-serif text-4xl mb-4">Your Recommended Size</h2>
+                <p className="text-gray-600 mb-8">Based on your measurements, we suggest starting with size:</p>
+                <div className="text-6xl font-bold text-brand-accent mb-8">{calculatedSize}</div>
+
+                {path !== 'size' && (
+                    <div className="bg-brand-accent/10 p-6 rounded-lg">
+                        <p className="text-brand-text mb-4">Great! Now let's find the perfect styles for your shape.</p>
+                        <button
+                            onClick={() => setStep('shape_1')}
+                            className="bg-brand-accent text-white font-bold text-lg px-12 py-4 rounded-lg hover:opacity-90"
+                        >
+                            Continue to Style Finder
+                        </button>
+                    </div>
+                )}
+            </>
+        ) : (
+            <>
+                <h2 className="font-serif text-4xl mb-4">Size Not Found</h2>
+                <p className="text-gray-600 mb-8 max-w-md mx-auto">We couldn't find a matching size for the measurements provided. Please double-check your numbers and try again.</p>
+                <button
+                    onClick={() => setStep('size_calculator')}
+                    className="bg-brand-accent text-white font-bold text-lg px-12 py-4 rounded-lg hover:opacity-90"
+                >
+                    Re-enter Measurements
+                </button>
+            </>
+        )}
+        <button onClick={() => setStep('hub')} className="block mx-auto mt-8 text-sm text-gray-500 hover:text-brand-text">Start Over</button>
+    </div>
+);
+
+const ShapeStep = ({ handleAnswer, setStep, path }) => (
+    <div className="text-center">
+        <h2 className="font-serif text-4xl mb-4">Which shape best describes you?</h2>
+        <p className="text-gray-600 mb-8">This helps us recommend styles that prevent gaping or spilling.</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <SelectionCard text="Round" onClick={() => { handleAnswer('shape', 'round'); setStep('results'); }} />
+            <SelectionCard text="Teardrop" onClick={() => { handleAnswer('shape', 'teardrop'); setStep('results'); }} />
+            <SelectionCard text="Bell" onClick={() => { handleAnswer('shape', 'bell'); setStep('results'); }} />
+            <SelectionCard text="East-West" onClick={() => { handleAnswer('shape', 'east-west'); setStep('results'); }} />
+            <SelectionCard text="Side Set" onClick={() => { handleAnswer('shape', 'side-set'); setStep('results'); }} />
+            <SelectionCard text="Slender" onClick={() => { handleAnswer('shape', 'slender'); setStep('results'); }} />
+        </div>
+        <button
+            onClick={() => setStep(path === 'style' ? 'hub' : 'size_calculator')}
+            className="mt-8 text-sm text-gray-500 hover:text-brand-text"
+        >
+            ← Back
+        </button>
+    </div>
+);
+
+const ResultsStep = ({ answers, path, setStep }) => (
+    <div className="text-center">
+        <h2 className="font-serif text-4xl mb-4">Your Personalised Recommendations</h2>
+        <p className="text-gray-600 mb-8">Based on your answers, here are the styles we think you'll love.</p>
+        <div className="border-t pt-8 max-w-md mx-auto text-left">
+            <h3 className="text-2xl font-semibold mb-4 text-center">We recommend trying a <strong>Plunge Bra</strong>.</h3>
+            <p className="text-gray-700">This style is great for your <strong>{answers.shape}</strong> shape because it offers less coverage on top, preventing gaping, and the low center gore is perfect for bringing your breasts together for a flattering silhouette.</p>
+        </div>
+        <button onClick={() => setStep('hub')} className="mt-8 text-sm text-gray-500 hover:text-brand-text">Start Over</button>
+    </div>
+);
+
+
+// --- Main Quiz Component ---
+
+export default function QuizFlow() {
+    const [step, setStep] = useState('hub');
+    const [path, setPath] = useState(null);
+    const [answers, setAnswers] = useState({});
+    const [calculatedSize, setCalculatedSize] = useState(null);
+
+    const handleAnswer = (questionId, answer) => {
+        setAnswers(prev => ({ ...prev, [questionId]: answer }));
+    };
+
+    const renderStep = () => {
+        switch (step) {
+            case 'hub':
+                return <HubStep setPath={setPath} setStep={setStep} />;
+            case 'size_calculator':
+                return <SizeCalculatorStep setStep={setStep} setCalculatedSize={setCalculatedSize} />;
+            case 'size_result':
+                return <SizeResultStep calculatedSize={calculatedSize} path={path} setStep={setStep} />;
+            case 'shape_1':
+                return <ShapeStep handleAnswer={handleAnswer} setStep={setStep} path={path} />;
+            case 'results':
+                return <ResultsStep answers={answers} path={path} setStep={setStep} />;
+            default:
+                return <div>Quiz Error. <button onClick={() => setStep('hub')}>Restart</button></div>;
+        }
+    };
+
+    return (
+        <div className="w-full max-w-4xl mx-auto py-16 transition-opacity duration-500">
+            {renderStep()}
+        </div>
+    );
 }
