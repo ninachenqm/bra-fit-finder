@@ -1,105 +1,30 @@
 import React, { useState, useMemo } from 'react';
+import { sizeChartInches, sizeChartCm } from '../data/sizeChart';
 
 // --- Data & Logic ---
-// I've parsed and combined your two CSV files into this single data structure.
-// Values like "31 1/2" have been converted to numbers (31.5).
-const sizeChart = [
-    { underband: 26, overbust: 30, size: "30A" },
-    { underband: 26, overbust: 31.5, size: "30B" },
-    { underband: 26, overbust: 32.5, size: "30C" },
-    { underband: 26, overbust: 33.5, size: "30D" },
-    { underband: 28, overbust: 32.5, size: "32A" },
-    { underband: 28, overbust: 33.5, size: "32B" },
-    { underband: 28, overbust: 34.5, size: "32C" },
-    { underband: 28, overbust: 35.5, size: "32D" },
-    { underband: 28, overbust: 36.5, size: "32DD" },
-    { underband: 28, overbust: 37.5, size: "32F" },
-    { underband: 28, overbust: 38.5, size: "32G" },
-    { underband: 28, overbust: 39.5, size: "32H" },
-    { underband: 30, overbust: 34.5, size: "34A" },
-    { underband: 30, overbust: 35.5, size: "34B" },
-    { underband: 30, overbust: 36.5, size: "34C" },
-    { underband: 30, overbust: 37.5, size: "34D" },
-    { underband: 30, overbust: 38.5, size: "34DD" },
-    { underband: 30, overbust: 39.5, size: "34F" },
-    { underband: 30, overbust: 40.5, size: "34F" },
-    { underband: 30, overbust: 41.5, size: "34G" },
-    { underband: 30, overbust: 42.5, size: "34G" },
-    { underband: 30, overbust: 43.5, size: "34H" },
-    { underband: 32, overbust: 36.5, size: "36A" },
-    { underband: 32, overbust: 37.5, size: "36B" },
-    { underband: 32, overbust: 38.5, size: "36C" },
-    { underband: 32, overbust: 39.5, size: "36D" },
-    { underband: 32, overbust: 40.5, size: "36DD" },
-    { underband: 32, overbust: 41.5, size: "36F" },
-    { underband: 32, overbust: 42.5, size: "36F" },
-    { underband: 32, overbust: 43.5, size: "36G" },
-    { underband: 32, overbust: 44.5, size: "36H" },
-    { underband: 32, overbust: 45.5, size: "36H" },
-    { underband: 34, overbust: 37.5, size: "38A" },
-    { underband: 34, overbust: 38.5, size: "38A" },
-    { underband: 34, overbust: 39.5, size: "38B" },
-    { underband: 34, overbust: 40.5, size: "38C" },
-    { underband: 34, overbust: 41.5, size: "38D" },
-    { underband: 34, overbust: 42.5, size: "38D" },
-    { underband: 34, overbust: 43.5, size: "38DD" },
-    { underband: 34, overbust: 44.5, size: "38DD" },
-    { underband: 34, overbust: 45.5, size: "38F" },
-    { underband: 36, overbust: 42.5, size: "40B" },
-    { underband: 36, overbust: 43.5, size: "40B" },
-    { underband: 36, overbust: 44.5, size: "40C" },
-    { underband: 36, overbust: 45.5, size: "40D" },
-    { underband: 36, overbust: 46.5, size: "40DD" },
-    { underband: 36, overbust: 47.5, size: "40F" },
-    { underband: 36, overbust: 48.5, size: "40G" },
-    { underband: 36, overbust: 49.5, size: "40H" },
-    { underband: 38, overbust: 42.5, size: "42A" },
-    { underband: 38, overbust: 43.5, size: "42B" },
-    { underband: 38, overbust: 45.5, size: "42C" },
-    { underband: 38, overbust: 46.5, size: "42D" },
-    { underband: 38, overbust: 47.5, size: "42D" },
-    { underband: 38, overbust: 48.5, size: "42DD" },
-    { underband: 38, overbust: 49.5, size: "42F" },
-    { underband: 38, overbust: 50.5, size: "42G" },
-    { underband: 38, overbust: 51.5, size: "42H" },
-    { underband: 40, overbust: 43.5, size: "44A" },
-    { underband: 40, overbust: 44.5, size: "44A" },
-    { underband: 40, overbust: 45.5, size: "44B" },
-    { underband: 40, overbust: 47.5, size: "44C" },
-    { underband: 40, overbust: 48.5, size: "44D" },
-    { underband: 40, overbust: 50.5, size: "44DD" },
-    { underband: 40, overbust: 51.5, size: "44F" },
-    { underband: 40, overbust: 52.5, size: "44G" },
-    { underband: 40, overbust: 53.5, size: "44H" },
-    { underband: 42, overbust: 51.5, size: "46D" },
-    { underband: 42, overbust: 52.5, size: "46DD" },
-    { underband: 42, overbust: 53.5, size: "46F" },
-    { underband: 42, overbust: 54.5, size: "46G" },
-    { underband: 42, overbust: 55.5, size: "46H" },
-    { underband: 42, overbust: 56.5, size: "46H" },
-];
 
 // This function finds the closest match in the chart.
-// It rounds the user's input to the nearest valid measurement in our table.
-const findBraSize = (under, over) => {
+const findBraSize = (under, over, chart, unit) => {
     if (!under || !over) return null;
 
     // Find the closest valid underband measurement from our chart
-    const validUnderbands = [...new Set(sizeChart.map(item => item.underband))];
+    const validUnderbands = [...new Set(chart.map(item => item.underband))];
     const closestUnderband = validUnderbands.reduce((prev, curr) =>
         (Math.abs(curr - under) < Math.abs(prev - under) ? curr : prev)
     );
 
     // Filter the chart for that underband and find the closest overbust
-    const possibleFits = sizeChart.filter(item => item.underband === closestUnderband);
+    const possibleFits = chart.filter(item => item.underband === closestUnderband);
     if (possibleFits.length === 0) return null;
 
     const closestFit = possibleFits.reduce((prev, curr) =>
         (Math.abs(curr.overbust - over) < Math.abs(prev.overbust - over) ? curr : prev)
     );
 
-    // To be a valid match, the user's measurement should be reasonably close
-    if (Math.abs(closestFit.overbust - over) > 1) { // Allow a 1-inch tolerance
+    // To be a valid match, the user's measurement should be reasonably close.
+    // We use a different tolerance for inches vs. cm.
+    const tolerance = unit === 'in' ? 1.0 : 2.5;
+    if (Math.abs(closestFit.overbust - over) > tolerance) {
         return null;
     }
 
@@ -119,18 +44,36 @@ const SelectionCard = ({ text, subtext, onClick }) => (
     </div>
 );
 
-const InputField = ({ label, value, onChange }) => (
+const InputField = ({ label, value, onChange, placeholder }) => (
     <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
         <input
             type="number"
             value={value}
             onChange={e => onChange(e.target.value)}
-            placeholder="e.g., 34"
+            placeholder={placeholder}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-brand-accent focus:border-brand-accent"
         />
     </div>
 );
+
+const UnitToggle = ({ unit, setUnit }) => (
+    <div className="flex justify-center items-center my-6">
+        <button
+            onClick={() => setUnit('in')}
+            className={`px-4 py-2 rounded-l-lg transition-colors ${unit === 'in' ? 'bg-brand-accent text-white' : 'bg-gray-200 text-gray-700'}`}
+        >
+            Inches
+        </button>
+        <button
+            onClick={() => setUnit('cm')}
+            className={`px-4 py-2 rounded-r-lg transition-colors ${unit === 'cm' ? 'bg-brand-accent text-white' : 'bg-gray-200 text-gray-700'}`}
+        >
+            Centimeters
+        </button>
+    </div>
+);
+
 
 // --- Quiz Step Components ---
 
@@ -161,9 +104,11 @@ const HubStep = ({ setPath, setStep }) => (
 const SizeCalculatorStep = ({ setStep, setCalculatedSize }) => {
     const [underbust, setUnderbust] = useState('');
     const [overbust, setOverbust] = useState('');
+    const [unit, setUnit] = useState('in'); // 'in' or 'cm'
 
     const handleFindSize = () => {
-        const size = findBraSize(parseFloat(underbust), parseFloat(overbust));
+        const chart = unit === 'in' ? sizeChartInches : sizeChartCm;
+        const size = findBraSize(parseFloat(underbust), parseFloat(overbust), chart, unit);
         setCalculatedSize(size);
         setStep('size_result');
     };
@@ -171,16 +116,28 @@ const SizeCalculatorStep = ({ setStep, setCalculatedSize }) => {
     return (
         <div className="text-center">
             <h2 className="font-serif text-4xl mb-4">Bra Size Calculator</h2>
-            <p className="text-gray-600 mb-8 max-w-xl mx-auto">Enter your measurements in inches to find your recommended starting size.</p>
+            <p className="text-gray-600 mb-8 max-w-xl mx-auto">Enter your measurements to find your recommended starting size.</p>
+
+            <UnitToggle unit={unit} setUnit={setUnit} />
 
             <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-200">
                 <div className="flex flex-col md:flex-row gap-4 mb-6">
-                    <InputField label="Underband (inches)" value={underbust} onChange={setUnderbust} />
-                    <InputField label="Overbust (inches)" value={overbust} onChange={setOverbust} />
+                    <InputField
+                        label={`Underband (${unit})`}
+                        value={underbust}
+                        onChange={setUnderbust}
+                        placeholder={unit === 'in' ? 'e.g., 34' : 'e.g., 86.5'}
+                    />
+                    <InputField
+                        label={`Overbust (${unit})`}
+                        value={overbust}
+                        onChange={setOverbust}
+                        placeholder={unit === 'in' ? 'e.g., 39.5' : 'e.g., 100.5'}
+                    />
                 </div>
                 <button
                     onClick={handleFindSize}
-                    className="w-full bg-brand-accent text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity"
+                    className="w-full bg-brand-accent text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
                     disabled={!underbust || !overbust}
                 >
                     Find My Size
@@ -189,7 +146,6 @@ const SizeCalculatorStep = ({ setStep, setCalculatedSize }) => {
 
             <div className="mt-8">
                 <p className="text-gray-600 mb-4">Not sure how to measure?</p>
-                {/* Replace this with your actual measurement guide image */}
                 <img
                     src="https://placehold.co/600x400/FAFAF9/8B9F8A?text=Measurement+Guide+Image"
                     alt="A diagram showing where to measure the underband and overbust for bra fitting"
