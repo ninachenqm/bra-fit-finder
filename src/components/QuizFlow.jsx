@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { sizeChartInches, sizeChartCm } from '../data/sizeChart';
 
 // --- Data & Logic ---
@@ -189,7 +189,7 @@ const SizeResultStep = ({ calculatedSize, path, setStep }) => (
                 </button>
             </>
         )}
-        <button onClick={() => setStep('hub')} className="block mx-auto mt-8 text-sm text-gray-500 hover:text-brand-text">Start Over</button>
+        <button onClick={() => setStep('size_calculator')} className="block mx-auto mt-8 text-sm text-gray-500 hover:text-brand-text">Start Over</button>
     </div>
 );
 
@@ -222,7 +222,7 @@ const ResultsStep = ({ answers, path, setStep }) => (
             <h3 className="text-2xl font-semibold mb-4 text-center">We recommend trying a <strong>Plunge Bra</strong>.</h3>
             <p className="text-gray-700">This style is great for your <strong>{answers.shape}</strong> shape because it offers less coverage on top, preventing gaping, and the low center gore is perfect for bringing your breasts together for a flattering silhouette.</p>
         </div>
-        <button onClick={() => setStep('hub')} className="mt-8 text-sm text-gray-500 hover:text-brand-text">Start Over</button>
+        <button onClick={() => setStep('size_calculator')} className="mt-8 text-sm text-gray-500 hover:text-brand-text">Start Over</button>
     </div>
 );
 
